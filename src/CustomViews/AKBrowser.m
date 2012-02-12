@@ -18,4 +18,14 @@
     return YES;
 }
 
+-(NSColor*)backgroundColor
+{
+    return [ NSColor colorWithCalibratedWhite:0.9 alpha:1.0 ];
+}
+
+-(BOOL)separatesColumns
+{
+    return YES;
+}
+
 @end

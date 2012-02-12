@@ -67,7 +67,9 @@
         return nil;
     }
 
-    return [[self _subtopics] objectAtIndex:subtopicIndex];
+    return subtopicIndex < (NSInteger)[[self _subtopics]count]
+    ? [_subtopics objectAtIndex:subtopicIndex]
+    : nil;
 }
 
 

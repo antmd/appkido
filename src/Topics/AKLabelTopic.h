@@ -16,7 +16,7 @@
 #pragma mark -
 #pragma mark Factory methods
 
-+ (AKLabelTopic *)topicWithLabel:(NSString *)label;
++ (AKLabelTopic *)topicWithLabel:(NSString *)label parentTopic:(AKTopic*)parent;
 
 
 #pragma mark -

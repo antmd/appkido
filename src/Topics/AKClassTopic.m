@@ -130,12 +130,12 @@
     return path;
 }
 
-- (BOOL)browserCellHasChildren
+- (BOOL)isLeaf
 {
-    return [_classNode hasChildClasses];
+    return ![_classNode hasChildClasses];
 }
 
-- (NSArray *)childTopics
+- (NSArray *)childNodes
 {
     NSMutableArray *columnValues = [NSMutableArray array];
     NSEnumerator *en = [[AKSortUtils arrayBySortingArray:[_classNode childClasses]] objectEnumerator];

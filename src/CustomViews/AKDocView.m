@@ -7,7 +7,6 @@
 
 #import "AKDocView.h"
 
-#import <WebKit/WebKit.h>
 #import "AKTextView.h"
 #import "AKPrefUtils.h"
 #import "AKTextUtils.h"
@@ -21,11 +20,9 @@
 
 @interface AKDocView (Private)
 
-- (NSView *)_subview;
 - (void)_updateDocDisplay;
-- (void)_useScrollViewToDisplayPlainText:(NSData *)textData;
-- (void)_useWebViewToDisplayHTML:(NSData *)htmlData
-    fromFile:(NSString *)htmlFilePath;
+- (void)_useWebViewToDisplayHTML:(NSData *)htmlData    fromFile:(NSString *)htmlFilePath   isPlainText:(BOOL)isPlainText;
+
 
 @end
 
@@ -36,79 +33,50 @@
 #pragma mark -
 #pragma mark Init/awake/dealloc
 
+
+-(void)_setup
+{
+    _headerFontName = @"Monaco";
+    _headerFontSize = 10;
+    _docMagnifier = 100;
+}
+
 - (id)initWithFrame:(NSRect)frameRect
 {
     if ((self = [super initWithFrame:frameRect]))
     {
-        _headerFontName = @"Monaco";
-        _headerFontSize = 10;
-        _docMagnifier = 100;
+        [self _setup];
     }
 
     return self;
 }
 
+- (id)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if (self) {
+        [ self _setup ];
+    }
+    return self;
+}
+
 - (void)awakeFromNib
 {
-    // Set the _scrollView ivar and make it our one and only subview.
-    _scrollView = [[NSScrollView alloc] initWithFrame:[self bounds]];
-    [_scrollView setHasHorizontalScroller:NO];
-    [_scrollView setHasVerticalScroller:YES];
-    [_scrollView setAutoresizingMask:
-        (NSViewWidthSizable | NSViewHeightSizable)];
-    [self addSubview:_scrollView];
 
-    // Create a text view to be the document view of _scrollView.
-    // [agl] can I do this in IB now?  if so, remember *NOT* to release in
-    // -dealloc
-    AKTextView *textView =
-        [[[AKTextView alloc] initWithFrame:[self bounds]] autorelease];
 
-    [textView setAutoresizingMask:
-        (NSViewWidthSizable | NSViewHeightSizable)];
-    [textView setEditable:NO];
-    [textView setSelectable:YES];
-    [textView setImportsGraphics:YES];
-    [textView setRichText:YES];
-    [textView setDelegate:(id <NSTextViewDelegate>)[[_scrollView window] delegate]];
-    [textView setMenu:[self menu]];
-
-    [textView setFrame:[[_scrollView contentView] bounds]];
-    [_scrollView setDocumentView:textView];
-
-    // Remove ourselves from the key view loop and splice the text view
-    // in our place.
-    _originalPreviousKeyView = [[self previousKeyView] retain];
-    _originalNextKeyView = [[self nextKeyView] retain];
-    [_originalPreviousKeyView setNextKeyView:textView];
-    [textView setNextKeyView:_originalNextKeyView];
-
-    // Create a WebView that will replace _scrollView in the view hierarchy
-    // at appropriate times.
-    // [agl] can I do this in IB now?  if so, remember *NOT* to release in
-    // -dealloc
-    _webView =
-        [[WebView alloc]
-            initWithFrame:[_scrollView frame]
-            frameName:nil
-            groupName:nil];
-    [_webView setAutoresizingMask:[_scrollView autoresizingMask]];
-    [_webView setPolicyDelegate:_docListController];
-    [_webView setUIDelegate:_docListController];
-
+    [self setPolicyDelegate:_docListController];
+    [self setUIDelegate:_docListController];
+    
     // Update ivars with values from user prefs.
     [self applyPrefs];
+    
 }
 
 - (void)dealloc
 {
     [_docLocator release];
     [_headerFontName release];
-    [_scrollView release];
-    [_webView release];
     [_originalPreviousKeyView release];
     [_originalNextKeyView release];
-    [_docListController release];
 
     [super dealloc];
 }
@@ -183,25 +151,8 @@
 
 - (NSView *)grabFocus
 {
-    NSView *currentSubview = [self _subview];
-
-    if (currentSubview == _webView)
-    {
-        return _webView;
-    }
-    else
-    {
-        NSTextView *textView = [(NSScrollView *)currentSubview documentView];
-
-        if ([[textView window] makeFirstResponder:textView])
-        {
-            return textView;
-        }
-        else
-        {
-            return nil;
-        }
-    }
+    [[self window] makeFirstResponder:self];
+    return self;
 }
 
 
@@ -223,12 +174,6 @@
 
 @implementation AKDocView (Private)
 
-// Returns our first and only subview, which will be either _scrollView or
-// _webView.
-- (NSView *)_subview
-{
-    return [[self subviews] objectAtIndex:0];
-}
 
 - (void)_updateDocDisplay
 {
@@ -243,133 +188,53 @@
     NSString *htmlFilePath = [fileSection filePath];
     NSData *textData = [docToDisplay docTextData];
 
-    // Display the text in either _textView or _webView.  Whichever it
-    // is, swap it in as our subview if necessary.
-    if ([docToDisplay isPlainText])
-    {
-        [self _useScrollViewToDisplayPlainText:textData];
-    }
-    else
-    {
-        [self _useWebViewToDisplayHTML:textData fromFile:htmlFilePath];
-    }
 
-    // If we used _scrollView, clean it up.
-    if ([self _subview] == _scrollView)
-    {
-        // Make extra sure the cursor rects are updated so we get the
-        // hand cursor over links.  Note: you'd think we should
-        // invalidate the cursor rects for textView, but no, for some
-        // reason it doesn't work unless we do it for scrollView.
-        [[_scrollView window] invalidateCursorRectsForView:_scrollView];
-    
-        // For some reason the scroller often thinks the text is longer
-        // than it is, so I force a -tile.
-        [_scrollView tile];
-    }
+    [self _useWebViewToDisplayHTML:textData fromFile:htmlFilePath isPlainText:[docToDisplay isPlainText]];
+
 }
 
-- (void)_useScrollViewToDisplayPlainText:(NSData *)textData
+- (void)_useWebViewToDisplayHTML:(NSData *)htmlData    fromFile:(NSString *)htmlFilePath   isPlainText:(BOOL)isPlainText
 {
-    // Make _scrollView our subview if it isn't already.
-    NSView *currentSubview = [self _subview];
-    NSTextView *textView = [_scrollView documentView];
-
-    if (currentSubview != _scrollView)  // implies currentSubview is _webView
-    {
-        // Remove _webView from the key view loop.
-        id firstResponder = [[self window] firstResponder];
-        BOOL wasKey =
-            [firstResponder isKindOfClass:[NSView class]]
-                && [firstResponder isDescendantOf:_webView];
-        [_originalPreviousKeyView setNextKeyView:_originalNextKeyView];
-
-        // Swap in _scrollView as our subview.
-        [_scrollView setFrame:[currentSubview frame]];
-        [self replaceSubview:currentSubview with:_scrollView];
-
-        // Splice textView into the key view loop.
-        [_originalPreviousKeyView setNextKeyView:textView];
-        [textView setNextKeyView:_originalNextKeyView];
-        if (wasKey)
-            [[self window] makeFirstResponder:textView];
-    }
-
-    // Display the plain text in _scrollView.
-    NSString *fontName =
-        [AKPrefUtils stringValueForPref:AKHeaderFontNamePrefName];
-    NSInteger fontSize =
-        [AKPrefUtils intValueForPref:AKHeaderFontSizePrefName];
-    NSFont *plainTextFont = [NSFont fontWithName:fontName size:fontSize];
-    NSString *docString = @"";
-    if (textData)
-    {
-        docString =
-            [[[NSString alloc] initWithData:textData encoding:NSUTF8StringEncoding]
-                autorelease];
-    }
-
-    [textView setRichText:NO];
-    [textView setFont:plainTextFont];
-// Workaround for appkit bug (?) causing the last-used indentation
-// level to stick to the text view even if I clear its contents and
-// remove all its attributes.
-// [agl] -- but, now it causes assert error?
-//    [[textView layoutManager]
-//        replaceTextStorage:[[NSTextStorage alloc] initWithString:@""]];
-
-    [textView setString:docString];
-    [textView scrollRangeToVisible:NSMakeRange(0, 0)];
-}
-
-- (void)_useWebViewToDisplayHTML:(NSData *)htmlData
-    fromFile:(NSString *)htmlFilePath
-{
-    // Make _webView our subview if it isn't already.
-    NSView *currentSubview = [self _subview];
-    NSTextView *textView = [_scrollView documentView];
-
-    if (currentSubview != _webView)  // implies currentSubview is _scrollView
-    {
-        // Remove textView from the key view loop.
-        BOOL wasKey = ([[self window] firstResponder] == textView);
-        [_originalPreviousKeyView setNextKeyView:_originalNextKeyView];
-
-        // Swap in _webView as our subview.
-        [_webView setFrame:[currentSubview frame]];
-        [self replaceSubview:currentSubview with:_webView];
-
-        // Splice _webView into the key view loop.
-        // [agl] TODO -- the wasKey stuff doesn't work
-        [_originalPreviousKeyView setNextKeyView:_webView];
-        [_webView setNextKeyView:_originalNextKeyView];
-        if (wasKey)
-            [[self window] makeFirstResponder:_webView];
-    }
 
     // Apply the user's magnification preference.
-    float multiplier = ((float)_docMagnifier) / 100.0f;
+    //float multiplier = ((float)_docMagnifier) / 100.0f;
 
-    [_webView setTextSizeMultiplier:multiplier];
+    //[self setTextSizeMultiplier:multiplier];
 
-    // Display the HTML in _webView.
+    // Display the HTML in self.
     NSString *htmlString = @"";
     if (htmlData)
     {
         NSMutableData *zData = [NSMutableData dataWithData:htmlData];
         [zData setLength:([zData length] + 1)];
         htmlString = [NSString stringWithUTF8String:[zData bytes]];
+        if (isPlainText)
+        {
+            // load custom JavaScript from local bundle
+            NSURL *syntaxHighlightBaseURL = [[NSBundle mainBundle] resourceURL ];
+            syntaxHighlightBaseURL = [syntaxHighlightBaseURL URLByAppendingPathComponent:@"syntaxhighlighter" isDirectory:YES ];
+            
+            NSURL* scriptBaseURL = [ syntaxHighlightBaseURL URLByAppendingPathComponent:@"scripts" isDirectory:YES ];
+            NSURL* styleBaseURL = [ syntaxHighlightBaseURL URLByAppendingPathComponent:@"styles" isDirectory:YES ];
+            
+            NSString* coreJsURLString = [[ scriptBaseURL URLByAppendingPathComponent:@"shCore.js" isDirectory:NO ] absoluteString] ;
+            NSString* brushJsURLString = [[ scriptBaseURL URLByAppendingPathComponent:@"shBrushObjectiveC.js" isDirectory:NO ] absoluteString] ;
+            NSString* coreCssURLString = [[ styleBaseURL URLByAppendingPathComponent:@"shCore.css" isDirectory:NO ]absoluteString] ;
+            NSString* brushCssURLString = [[ styleBaseURL URLByAppendingPathComponent:@"shThemeDefault.css" isDirectory:NO ] absoluteString] ;
+
+            htmlString=[ NSString stringWithFormat:@"<html><head><script type=\"text/javascript\" src=\"%@\"></script><script type=\"text/javascript\" src=\"%@\"></script><link rel=\"StyleSheet\" type=\"text/css\" href=\"%@\"><link rel=\"StyleSheet\" type=\"text/css\" href=\"%@\"></head><body><pre class=\"brush: objc; gutter: false;\">%@</pre><script type=\"text/javascript\">SyntaxHighlighter.all()</script></body></html>",coreJsURLString, brushJsURLString, coreCssURLString,brushCssURLString , htmlString ];
+        }
     }
 
     if (htmlFilePath)
     {
-        [[_webView mainFrame]
+        [[self mainFrame]
             loadHTMLString:htmlString
             baseURL:[NSURL fileURLWithPath:htmlFilePath]];
     }
     else
     {
-        [[_webView mainFrame]
+        [[self mainFrame]
             loadHTMLString:htmlString
             baseURL:nil];
     }

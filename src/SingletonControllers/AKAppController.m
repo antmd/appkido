@@ -44,6 +44,12 @@
 
 // Thanks to Dominik Wagner for AppleScript support!
 
+void dsk_loadFscript(void);
+
+@interface NSObject(FSCRIPT)
+-(void)insertInMainMenu;
+@end
+
 @interface NSApplication (NSAppScriptingAdditions)
 - (id)handleSearchScriptCommand:(NSScriptCommand *)aCommand;
 @end
@@ -673,6 +679,7 @@ static NSTimeInterval g_checkpointTime = 0.0;
     // Add the Debug menu if certain conditions are met.
     [self _maybeAddDebugMenu];  // [agl] uses AKDebugUtils
 
+    dsk_loadFscript();
     _finishedInitializing = YES;
 }
 
@@ -867,6 +874,7 @@ static NSTimeInterval g_checkpointTime = 0.0;
 - (AKWindowController *)_windowControllerForNewWindowWithLayout:(AKWindowLayout *)windowLayout
 {
     AKWindowController *windowController = [[[AKWindowController alloc] initWithDatabase:_appDatabase] autorelease];
+    [windowController showWindow:self];
 
     [_windowControllers addObject:windowController];
     if (windowLayout)
@@ -883,6 +891,7 @@ static NSTimeInterval g_checkpointTime = 0.0;
 
     if ([windowDelegate isKindOfClass:[AKWindowController class]])
     {
+        [ windowDelegate teardown:self ];
         [_windowControllers removeObjectIdenticalTo:windowDelegate];
     }
 }
@@ -1286,3 +1295,22 @@ static NSTimeInterval g_checkpointTime = 0.0;
 }
 
 @end
+
+
+void dsk_loadFscript()
+{
+    
+    NSString * fScriptAnywhereBundlePath = @"/Library/Frameworks/FScript.framework" ;
+    
+    NSBundle * bundle ;
+    id         principalClass ;
+    
+    bundle = [ NSBundle bundleWithPath:fScriptAnywhereBundlePath ] ;
+    if ( [ bundle load ] )
+    {
+        principalClass = NSClassFromString( @"FScriptMenuItem" ) ;
+        [ principalClass insertInMainMenu ] ;               // Will exist at runtime
+    }
+    
+} 
+

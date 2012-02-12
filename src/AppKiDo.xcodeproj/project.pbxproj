@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -579,6 +579,9 @@
 		73E86F430E3974E1002AFB76 /* AKMemberNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 73E86F410E3974E1002AFB76 /* AKMemberNode.m */; };
 		73E86F4A0E397760002AFB76 /* AKNotificationNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 73E86F480E397760002AFB76 /* AKNotificationNode.h */; };
 		73E86F4B0E397760002AFB76 /* AKNotificationNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 73E86F490E397760002AFB76 /* AKNotificationNode.m */; };
+		ED94CD7514E8481500D63A31 /* NSObject+DSK.m in Sources */ = {isa = PBXBuildFile; fileRef = ED94CD7314E847F900D63A31 /* NSObject+DSK.m */; };
+		ED94CD7614E8481500D63A31 /* NSObject+DSK.m in Sources */ = {isa = PBXBuildFile; fileRef = ED94CD7314E847F900D63A31 /* NSObject+DSK.m */; };
+		ED94CD7814E8494D00D63A31 /* syntaxhighlighter in Resources */ = {isa = PBXBuildFile; fileRef = ED94CD7714E8494700D63A31 /* syntaxhighlighter */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -885,6 +888,9 @@
 		73E86F490E397760002AFB76 /* AKNotificationNode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AKNotificationNode.m; sourceTree = "<group>"; };
 		73EE9E3D06856D120008CBEC /* AKDatabase.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = AKDatabase.h; sourceTree = "<group>"; };
 		73EE9E3E06856D120008CBEC /* AKDatabase.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = AKDatabase.m; sourceTree = "<group>"; };
+		ED94CD7214E847F900D63A31 /* NSObject+DSK.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSObject+DSK.h"; path = "GlobalClasses/NSObject+DSK.h"; sourceTree = "<group>"; };
+		ED94CD7314E847F900D63A31 /* NSObject+DSK.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+DSK.m"; path = "GlobalClasses/NSObject+DSK.m"; sourceTree = "<group>"; };
+		ED94CD7714E8494700D63A31 /* syntaxhighlighter */ = {isa = PBXFileReference; lastKnownFileType = folder; name = syntaxhighlighter; path = ../web/syntaxhighlighter; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -962,6 +968,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				ED94CD7714E8494700D63A31 /* syntaxhighlighter */,
 				73C891D614E10B7600A54FF6 /* AppKiDo.xib */,
 				73C891D814E10B7600A54FF6 /* DevToolsPath.xib */,
 				73C891DA14E10B7600A54FF6 /* MainMenu.xib */,
@@ -1271,6 +1278,8 @@
 		732BD61605ED913B0055715D /* ---- S U P P O R T   C L A S S E S ---- */ = {
 			isa = PBXGroup;
 			children = (
+				ED94CD7214E847F900D63A31 /* NSObject+DSK.h */,
+				ED94CD7314E847F900D63A31 /* NSObject+DSK.m */,
 				73D237000D4561C300EF7503 /* fmdb */,
 				734B2D8D0810C882001D5F3A /* DIGS */,
 				73A1B612061B6A7B002C95F1 /* AppKiDo constants */,
@@ -1928,7 +1937,7 @@
 				ORGANIZATIONNAME = "Andy Lee";
 			};
 			buildConfigurationList = 73DA1ED0089AEA560016F230 /* Build configuration list for PBXProject "AppKiDo" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -1989,6 +1998,7 @@
 				733DF63114E183B1007E6313 /* DocPaths.sql in Resources */,
 				733DF63214E183B1007E6313 /* DocPaths2.sql in Resources */,
 				733DF63314E183B1007E6313 /* HeaderPaths.sql in Resources */,
+				ED94CD7814E8494D00D63A31 /* syntaxhighlighter in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2161,6 +2171,7 @@
 				7382628D0FE6C4880020E4F1 /* AKFramework.m in Sources */,
 				737405CA1195B28D000BD282 /* AKSDKVersion.m in Sources */,
 				733DF5EC14E17700007E6313 /* AKSQLTemplate.m in Sources */,
+				ED94CD7514E8481500D63A31 /* NSObject+DSK.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2288,6 +2299,7 @@
 				7382628B0FE6C4880020E4F1 /* AKFramework.m in Sources */,
 				737405C81195B28D000BD282 /* AKSDKVersion.m in Sources */,
 				733DF5EE14E17700007E6313 /* AKSQLTemplate.m in Sources */,
+				ED94CD7614E8481500D63A31 /* NSObject+DSK.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2453,7 +2465,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				"OTHER_CFLAGS[arch=i386]" = "-fsingle-precision-constant";
 				"OTHER_CFLAGS[arch=ppc]" = "-fsingle-precision-constant";
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 				WARNING_CFLAGS = (
 					"-Wmost",
 					"-Wno-#warnings",
@@ -2504,7 +2516,7 @@
 				"MACOSX_DEPLOYMENT_TARGET[arch=x86_64]" = 10.6;
 				"OTHER_CFLAGS[arch=i386]" = "-fsingle-precision-constant";
 				"OTHER_CFLAGS[arch=ppc]" = "-fsingle-precision-constant";
-				SDKROOT = macosx10.6;
+				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = debugging;
 				WARNING_CFLAGS = (

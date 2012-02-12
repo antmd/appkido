@@ -21,7 +21,7 @@
  *              manages an NSBrowser used to navigate the framework
  *              database.
  */
-@interface AKTopicBrowserController : AKWindowSubcontroller
+@interface AKTopicBrowserController : AKWindowSubcontroller <NSBrowserDelegate>
 {
     // Values to display in all the columns of the browser.  Each element
     // is an array of values to be displayed in one column of the browser.
@@ -34,8 +34,11 @@
     // UI outlets.
     IBOutlet AKBrowser *_topicBrowser;
     IBOutlet NSTextField *_topicDescriptionField;
+    
+    
 }
 
+@property (readonly) NSArray* rootTopics;
 
 #pragma mark -
 #pragma mark Navigation

@@ -35,7 +35,7 @@
 
 
 @implementation AKTopicBrowserController
-
+@dynamic rootTopics;
 
 #pragma mark -
 #pragma mark Init/awake/dealloc
@@ -50,17 +50,30 @@
     return self;
 }
 
+//-(void)teardown
+//{
+//    [ self.
+//}
+
 - (void)dealloc
 {
     [_topicListsForBrowserColumns release];
 
     // Release non-UI outlets that were set in IB.  The window is
     // self-releasing, so we don't release UI outlets.
-    [_subtopicListController release];
+    //[_subtopicListController release];
 
     [super dealloc];
 }
 
+
+-(NSArray*)rootTopics
+{
+    if ([_topicListsForBrowserColumns count] == 0) {
+        [ self _setUpTopicsForZeroethBrowserColumn ];
+    }
+    return [_topicListsForBrowserColumns objectAtIndex:0 ];
+}
 
 #pragma mark -
 #pragma mark Navigation
@@ -150,8 +163,7 @@
 
 - (IBAction)doBrowserAction:(id)sender
 {
-    [_windowController jumpToTopic:
-        [[_topicBrowser selectedCell] representedObject]];
+    [_windowController jumpToTopic:[[[_topicBrowser selectedCell] representedObject]representedObject]];
 }
 
 
@@ -165,7 +177,6 @@
     [_topicBrowser loadColumnZero];
     [_topicBrowser selectRow:1 inColumn:0];  // selects "NSObject"
 
-    [_subtopicListController doAwakeFromNib];
 }
 
 - (void)applyUserPreferences
@@ -205,21 +216,14 @@
     [matrix renewRows:numRows columns:1];
 }
 
-- (void)browser:(NSBrowser *)sender willDisplayCell:(id)cell
-    atRow:(int)row column:(int)column
+-(void)browser:(NSBrowser *)sender willDisplayCell:(id)cell atRow:(NSInteger)row column:(NSInteger)column
 {
-    NSArray *topicList =
-        [_topicListsForBrowserColumns objectAtIndex:column];
-    AKTopic *topic = [topicList objectAtIndex:row];
-
-    [cell setRepresentedObject:topic];
-
-    [cell setTitle:[topic stringToDisplayInTopicBrowser]];
+    AKTopic *topic = [[cell representedObject] representedObject];
     [cell setEnabled:[topic browserCellShouldBeEnabled]];
-    [cell setLeaf:![topic browserCellHasChildren]];
+
 }
 
-- (BOOL)browser:(NSBrowser *)sender isColumnValid:(int)column
+- (BOOL)browser:(NSBrowser *)sender isColumnValid:(NSInteger)column
 {
     return YES;
 }
@@ -285,7 +289,7 @@
         AKTopic *prevTopic =
             [[_topicBrowser selectedCellInColumn:(columnNumber - 1)]
                 representedObject];
-        NSArray *columnValues = [prevTopic childTopics];
+        NSArray *columnValues = [prevTopic childNodes];
 
         if (columnValues && ([columnValues count] > 0))
         {
@@ -299,21 +303,22 @@
 {
     NSMutableArray *columnValues = [NSMutableArray array];
     AKDatabase *db = [_windowController database];
-    NSEnumerator *classEnum = [[AKSortUtils arrayBySortingArray:[db rootClasses]] objectEnumerator];
-    AKClassNode *classNode;
+    NSArray *classes = [AKSortUtils arrayBySortingArray:[db rootClasses]];
 
     // Set up the ":: classes ::" section of this browser column.  We want
     // the browser column to list all classes that don't have superclasses.
-    [columnValues addObject:[AKLabelTopic topicWithLabel:@":: classes ::"]];
+    AKLabelTopic* labelNode = [AKLabelTopic topicWithLabel:@":: classes ::" parentTopic:nil];
+    [columnValues addObject:labelNode];
 
-    while ((classNode = [classEnum nextObject]))
+   for (AKClassNode* classNode in classes)
     {
         [columnValues addObject:[AKClassTopic topicWithClassNode:classNode]];
     }
 
     // Set up the ":: other topics ::" section of this browser column.
     // We want the browser column to list all known frameworks.
-    [columnValues addObject:[AKLabelTopic topicWithLabel:@":: other topics ::"]];
+    labelNode = [AKLabelTopic topicWithLabel:@":: other topics ::" parentTopic:nil];
+    [columnValues addObject:labelNode];
 
     NSEnumerator *fwNameEnum = [[db sortedFrameworkNames] objectEnumerator];
     NSString *fwName;

@@ -24,4 +24,9 @@
     IBOutlet AKWindowController *_windowController;
 }
 
+/*!
+ * @brief  Sent by window controller when window containing all of the views is about to close.
+ */
+-(void)teardown;
+
 @end

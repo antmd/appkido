@@ -9,4 +9,9 @@
 
 @implementation AKWindowSubcontroller
 
+-(void)teardown
+{
+    return;
+}
+
 @end

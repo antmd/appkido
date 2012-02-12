@@ -6,7 +6,7 @@
  */
 
 #import <Cocoa/Cocoa.h>
-
+#import "NSObject+DSK.h"
 @class AKDatabase;
 @class AKTopic;
 @class AKDoc;
@@ -17,6 +17,7 @@
 @class AKWindowLayout;
 @class AKSavedWindowState;
 @class AKDocView;
+@class AKSubtopicListController;
 
 /*!
  * @class       AKWindowController
@@ -37,7 +38,7 @@
 // history"; "navigate" means "navigate the various subcontrollers to";
 // navigation always starts here at the window controller and propagates
 // to subcontrollers
-@interface AKWindowController : NSObject <NSToolbarDelegate>
+@interface AKWindowController : NSWindowController <NSWindowDelegate>
 {
     AKDatabase *_database;
 
@@ -56,6 +57,7 @@
     // Outlets to subcontrollers that manage different portions of the
     // window.
     IBOutlet AKTopicBrowserController *_topicBrowserController;
+    AKSubtopicListController* _subtopicListController;
     IBOutlet AKDocListController *_docListController;
     IBOutlet AKQuicklistController *_quicklistController;
 
@@ -86,22 +88,22 @@
     // UI outlets -- the Quicklist drawer.  This is connected to
     // _quicklistController.
     IBOutlet NSDrawer *_quicklistDrawer;
+    
+    AMBlockToken* _subtopicListControllerKVO;
 }
-
+@property (assign,nonatomic) IBOutlet AKSubtopicListController* subtopicListController;
 
 #pragma mark -
 #pragma mark Init/awake/dealloc
 
 /*! Designated initializer. */
 - (id)initWithDatabase:(AKDatabase *)database;
-
+-(void)teardown:(id)sender;
 
 #pragma mark -
 #pragma mark Getters and setters
 
 - (AKDatabase *)database;
-
-- (NSWindow *)window;
 
 - (AKDocLocator *)currentHistoryItem;
 

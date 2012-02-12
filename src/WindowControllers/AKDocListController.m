@@ -20,6 +20,10 @@
 #import "AKDocLocator.h"
 #import "AKDocView.h"
 
+DOMNode* cssElementNode( DOMDocument* dom, NSURL* url );
+DOMNode* jsElementNode( DOMDocument* dom, NSURL* url );
+
+
 @implementation AKDocListController
 
 
@@ -249,7 +253,8 @@
             || (tag == WebMenuItemTagDownloadImageToDisk)
             || (tag == WebMenuItemTagCopyImageToClipboard)
             || (tag == WebMenuItemTagCopyImageToClipboard)
-            || (tag == WebMenuItemTagCopy))
+            || (tag == WebMenuItemTagCopy)             
+                 )
         {
             [newMenuItems addObject:menuItem];
         }
@@ -294,4 +299,47 @@
     return newMenuItems;
 }
 
+//                _                                 _                            
+// \    / _  |_  |_ ._ _. ._ _   _  |   _   _.  _| | \  _  |  _   _   _. _|_  _  
+//  \/\/ (/_ |_) |  | (_| | | | (/_ |_ (_) (_| (_| |_/ (/_ | (/_ (_| (_|  |_ (/_ 
+//                                                                _|             
+
+-(void)_setCopiesOnScroll:(NSClipView*)clipView
+{
+    [ clipView setCopiesOnScroll:NO ];
+}
+
+- (void)webView:(WebView *)webView didFinishLoadForFrame:(WebFrame *)frame 
+{
+#ifdef DEBUG
+    NSLog(@"%@", ((DOMHTMLElement*)[frame DOMDocument].documentElement).outerHTML);
+#endif
+    
+    // This weird invocation works around a bug (I think) in WebKit, when subclassed.
+    // Without setting 'copiesOnScroll' to NO, AFTER at least one pass of the run loop,
+    // Then scrolling the WebView causes a Dali-esque melting effect of the text in the WebView
+
+    NSClipView* webClipView = (NSClipView*)[[[frame frameView ] subviews] objectAtIndex:0 ] ;
+    [ self performSelector:@selector(_setCopiesOnScroll:) withObject:webClipView afterDelay:0.1 ];
+
+}
+
+
 @end
+
+DOMNode* cssElementNode( DOMDocument* dom, NSURL* url )
+{
+    DOMElement* linkEl = [dom createElement:@"link"];
+    [linkEl setAttribute:@"rel" value:@"StyleSheet"];
+    [linkEl setAttribute:@"type" value:@"text/css"];
+    [linkEl setAttribute:@"href" value: [url absoluteString]];
+    return (DOMNode*)linkEl;
+}
+
+DOMNode* jsElementNode( DOMDocument* dom, NSURL* url )
+{
+    DOMElement* scriptEl = [ dom createElement:@"script"];
+    [scriptEl setAttribute:@"type" value:@"text/javascript" ];
+    [scriptEl setAttribute:@"src" value:[ url absoluteString ] ];
+    return (DOMNode*)scriptEl;
+}

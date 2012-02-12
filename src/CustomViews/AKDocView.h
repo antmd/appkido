@@ -6,6 +6,7 @@
  */
 
 #import <AppKit/AppKit.h>
+#import <WebKit/WebKit.h>
 
 @class AKDocLocator;
 @class WebView;
@@ -15,7 +16,7 @@
 // AKDocViewController class
 
 
-@interface AKDocView : NSView
+@interface AKDocView : WebView
 {
     AKDocLocator *_docLocator;
 
@@ -35,7 +36,6 @@
     // we are displaying a header file, in which case we use _scrollView
     // because we want to render plain text without being confused by angle
     // brackets in #import directives.
-    NSScrollView *_scrollView;
     WebView *_webView;  // nil if WebKit is not available.
 
     IBOutlet id _docListController;

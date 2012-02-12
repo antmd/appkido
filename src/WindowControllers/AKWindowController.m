@@ -34,7 +34,8 @@
 #import "AKDocView.h"
 #import "AKLinkResolver.h"
 #import "AKOldLinkResolver.h"
-
+#import "AKSubtopicListController.h"
+#import "NSObject+DSK.h"
 
 #pragma mark -
 #pragma mark Forward declarations of private methods
@@ -56,7 +57,7 @@
 
 
 @implementation AKWindowController
-
+@synthesize subtopicListController = _subtopicListController;
 
 #pragma mark -
 #pragma mark Private constants -- toolbar identifiers
@@ -69,7 +70,7 @@ static NSString *_AKToolbarID = @"AKToolbarID";
 
 - (id)initWithDatabase:(AKDatabase *)database
 {
-    if ((self = [super init]))
+    if ((self = [super initWithWindowNibName:[self windowNibName]]))
     {
         _database = [database retain];
 
@@ -77,19 +78,16 @@ static NSString *_AKToolbarID = @"AKToolbarID";
 
         _windowHistory = [[NSMutableArray alloc] initWithCapacity:maxHistory];
         _windowHistoryIndex = -1;
-
-        [NSBundle loadNibNamed:@"AppKiDo" owner:self];
     }
 
     return self;
 }
 
-- (id)init
+-(NSString*)windowNibName
 {
-    DIGSLogError_NondesignatedInitializer();
-    [self release];
-    return nil;
+    return @"AppKiDo" ;
 }
+
 
 - (void)awakeFromNib
 {
@@ -113,6 +111,9 @@ static NSString *_AKToolbarID = @"AKToolbarID";
     [_windowHistory removeAllObjects];
     AKClassNode *classNode = [_database classWithName:@"NSObject"];
     [self jumpToTopic:[AKClassTopic topicWithClassNode:classNode]];
+    
+    __block AKWindowController* this = self;
+    _subtopicListControllerKVO = [ [ self.subtopicListController addObserverForKeyPath:@"subtopicName" task:^(id obj, NSDictionary* change) { [this jumpToSubtopicWithName:this.subtopicListController.subtopicName ]; } ] retain];
 }
 
 - (void)dealloc
@@ -121,15 +122,25 @@ static NSString *_AKToolbarID = @"AKToolbarID";
 
     [_windowHistory release];
 
-    [_topicBrowserController release];
-    [_quicklistController release];
-    [[_quicklistDrawer contentView] release];
-    [_quicklistDrawer release];
-    [_docTextMenu release];
-    [_backMenu release];
-    [_forwardMenu release];
+    //[_topicBrowserController release];
+    //[_quicklistController release];
+    //[[_quicklistDrawer contentView] release];
+    //[_quicklistDrawer release];
+    //[_docTextMenu release];
+    //[_backMenu release];
+    //[_forwardMenu release];
 
     [super dealloc];
+}
+
+-(void)teardown:(id)sender
+{
+
+        [ self.subtopicListController removeObserverWithBlockToken:_subtopicListControllerKVO ];
+        [ _subtopicListControllerKVO release ];
+        
+        [ _topicBrowserController teardown ];
+    
 }
 
 
@@ -141,10 +152,6 @@ static NSString *_AKToolbarID = @"AKToolbarID";
     return _database;
 }
 
-- (NSWindow *)window
-{
-    return [_topicBrowser window];
-}
 
 - (AKDocLocator *)currentHistoryItem
 {
@@ -363,7 +370,7 @@ static NSString *_AKToolbarID = @"AKToolbarID";
     }
 
     // Restore the state of the inner split view.
-    [_innerSplitView ak_setHeight:[windowLayout middleViewHeight] ofSubview:_middleView];
+    //[_innerSplitView ak_setHeight:[windowLayout middleViewHeight] ofSubview:_middleView];
 
     // Restore the number of browser columns.
     if ([windowLayout numberOfBrowserColumns])
@@ -1024,7 +1031,8 @@ static NSString *_AKToolbarID = @"AKToolbarID";
 
 - (void)_refreshSuperclassButton
 {
-    AKClassNode *parentClass = [[self _currentTopic] parentClassOfTopic];
+    AKTopic* currentTopic = [[self _currentTopic] representedObject];
+    AKClassNode *parentClass = [ currentTopic parentClassOfTopic];
 
     // Enable or disable the Superclass button as appropriate.
     [_superclassButton setEnabled:(parentClass != nil)];

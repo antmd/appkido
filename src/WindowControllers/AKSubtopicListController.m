@@ -15,24 +15,48 @@
 #import "AKDocLocator.h"
 
 @implementation AKSubtopicListController
-
+@synthesize subtopicName = _subtopicName;
 
 #pragma mark -
 #pragma mark Init/awake/dealloc
 
-- (id)init
+- (void)_setup
 {
-    if ((self = [super init]))
-    {
-        _subtopics = [[NSMutableArray alloc] init];
-    }
 
+        _subtopics = [[NSMutableArray alloc] init];
+        _subtopicName = nil;
+}
+- (id)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if (self) {
+        [ self _setup ];
+    }
     return self;
+}
+
+
+- (id)init {
+    self = [super init];
+    if (self) {
+        [ self _setup ];
+    }
+    return self;
+}
+
+- (void)awakeFromNib
+{
+    NSBrowserCell *browserCell;
+    
+    // Tweak the subtopics table.
+    browserCell = [[[NSBrowserCell alloc] initTextCell:@""] autorelease];
+    [browserCell setLeaf:NO];
+    [browserCell setLoaded:YES];
+    // Tell subordinate controllers to awake.
+    [_docListController doAwakeFromNib];
 }
 
 - (void)dealloc
 {
-    [_subtopics release];
 
     // Release non-UI outlets that were set in IB.  The window is
     // self-releasing, so we don't release UI outlets.
@@ -58,7 +82,7 @@
     if (topicIsChanging)
     {
         // Update the arrays of table values and reload the subtopics table.
-        NSInteger numSubtopics = [newTopic numberOfSubtopics];
+        NSInteger numSubtopics = [newTopic numberOfSubtopics ] ;
         NSInteger i;
 
         [_subtopics removeAllObjects];
@@ -68,7 +92,7 @@
 
             [_subtopics addObject:subtopic];
         }
-        [_subtopicsTable reloadData];
+        [ self setContent:_subtopics];
     }
 
     // Update the selection in the subtopics table.
@@ -96,9 +120,6 @@
             subtopicIndex = 0;
         }
 
-        // Select the subtopic at that index.
-        [_subtopicsTable selectRowIndexes:[NSIndexSet indexSetWithIndex:subtopicIndex] byExtendingSelection:NO];
-
         AKSubtopic *subtopic = [_subtopics objectAtIndex:subtopicIndex];
 
         [_docListController setSubtopic:subtopic];
@@ -113,13 +134,12 @@
 
 - (void)jumpToSubtopicWithIndex:(NSInteger)subtopicIndex
 {
-    if (subtopicIndex != [_subtopicsTable selectedRow])
+    if (subtopicIndex != (NSInteger)[self selectionIndex])
     {
-        NSString *newSubtopicName =
+        self.subtopicName =
             [[_subtopics objectAtIndex:subtopicIndex]
                 subtopicName];
 
-        [_windowController jumpToSubtopicWithName:newSubtopicName];
         [_docListController focusOnDocListTable];
     }
 }
@@ -130,43 +150,22 @@
 
 - (IBAction)doSubtopicTableAction:(id)sender
 {
-    NSInteger selectedRow = [_subtopicsTable selectedRow];
-    NSString *newSubtopicName =
+    NSInteger selectedRow = (NSInteger)[self selectionIndex];
+    self.subtopicName =
         (selectedRow < 0)
         ? nil
         : [[_subtopics objectAtIndex:selectedRow] subtopicName];
 
-    // Tell the main window to select the subtopic at the selected index.
-    [_windowController jumpToSubtopicWithName:newSubtopicName];
 }
 
 
 #pragma mark -
 #pragma mark AKSubcontroller methods
 
-- (void)doAwakeFromNib
-{
-    NSBrowserCell *browserCell;
 
-    // Tweak the subtopics table.
-    browserCell = [[[NSBrowserCell alloc] initTextCell:@""] autorelease];
-    [browserCell setLeaf:NO];
-    [browserCell setLoaded:YES];
-    [[[_subtopicsTable tableColumns] objectAtIndex:0]
-        setDataCell:browserCell];
-
-    // Populate the subtopics table.
-    [_subtopicsTable reloadData];
-    [_subtopicsTable selectRowIndexes:[NSIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
-
-    // Tell subordinate controllers to awake.
-    [_docListController doAwakeFromNib];
-}
 
 - (void)applyUserPreferences
 {
-    [_subtopicsTable applyListFontPrefs];
-
     [_docListController applyUserPreferences];
 }
 

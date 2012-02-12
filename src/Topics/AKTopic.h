@@ -38,7 +38,7 @@
  *
  *              AKTopic is an abstract class.
  */
-@interface AKTopic : NSObject <AKSortable>
+@interface AKTopic : NSTreeNode <AKSortable>
 {
 }
 
@@ -108,19 +108,11 @@ extern NSString *AKGlobalsTopicName;
 // subclasses may override; defaults to YES
 - (BOOL)browserCellShouldBeEnabled;
 
-// subclasses may override; defaults to YES
-- (BOOL)browserCellHasChildren;
-
-// subclasses must override if they may have children
-// returns array of AKTopics
-- (NSArray *)childTopics;
 
 
 #pragma mark -
 #pragma mark Populating the subtopics table
 
-// subclasses must override
-- (NSInteger)numberOfSubtopics;
 
 // subclasses must override; not guaranteed to return the same instance
 // every time
@@ -130,4 +122,5 @@ extern NSString *AKGlobalsTopicName;
 
 - (AKSubtopic *)subtopicWithName:(NSString *)subtopicName;
 
+- (NSInteger)numberOfSubtopics;
 @end

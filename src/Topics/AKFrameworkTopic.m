@@ -115,7 +115,12 @@
     return [NSString stringWithFormat:@"%@%@", AKTopicBrowserPathSeparator, [self stringToDisplayInTopicBrowser]];
 }
 
-- (NSArray *)childTopics
+-(NSTreeNode*)parentNode
+{
+    return nil;
+}
+
+- (NSArray *)childNodes
 {
     NSMutableArray *columnValues = [NSMutableArray array];
     AKDatabase *aDatabase = [_topicFramework fwDatabase];

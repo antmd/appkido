@@ -15,7 +15,7 @@
 #pragma mark -
 #pragma mark Factory methods
 
-+ (AKLabelTopic *)topicWithLabel:(NSString *)label
++ (AKLabelTopic *)topicWithLabel:(NSString *)label parentTopic:(AKTopic *)parent
 {
     AKLabelTopic *obj = [[[self alloc] init] autorelease];
 
@@ -66,7 +66,7 @@
     }
     else
     {
-        return [self topicWithLabel:labelString];
+        return [self topicWithLabel:labelString parentTopic:nil];
     }
 }
 
@@ -90,16 +90,20 @@
     return [NSString stringWithFormat:@"%@%@", AKTopicBrowserPathSeparator, _label];
 }
 
-- (BOOL)browserCellShouldBeEnabled
+- (NSArray*)childNodes
 {
-    return NO;
+    return [NSArray array];
 }
 
-- (BOOL)browserCellHasChildren
+- (BOOL)isLeaf
 {
-    return NO;
+    return YES;
 }
 
+-(NSTreeNode*)parentNode
+{
+    return nil;
+}
 
 #pragma mark -
 #pragma mark AKSortable methods

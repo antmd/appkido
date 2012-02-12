@@ -127,14 +127,14 @@ NSString *AKGlobalsTopicName           = @"Types & Constants";
     return YES;
 }
 
-- (BOOL)browserCellHasChildren
+- (BOOL)isLeaf
 {
-    return YES;
+    return NO;
 }
 
-- (NSArray *)childTopics
+- (NSArray *)childNodes
 {
-    return nil;
+    return [NSArray array];
 }
 
 

@@ -19,7 +19,7 @@
  *              manages an NSTableView used to list the subtopics of the
  *              window's selected topic.
  */
-@interface AKSubtopicListController : AKWindowSubcontroller
+@interface AKSubtopicListController : NSArrayController
 {
     // Elements are instances of AKSubtopic classes.  Order of elements
     // matches order of subtopics listed in _subtopicsTable.  This is a
@@ -29,10 +29,10 @@
     // Non-UI outlets.
     IBOutlet AKDocListController *_docListController;
 
-    // UI outlets.
-    IBOutlet AKTableView *_subtopicsTable;
+    // UI outlets.    
+    NSString* _subtopicName ; // For target to pick up
 }
-
+@property (copy, nonatomic) NSString* subtopicName ;
 
 #pragma mark -
 #pragma mark Navigation
